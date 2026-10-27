@@ -114,6 +114,13 @@ button.alt{background:transparent;color:#fff;border:2px solid #fff;box-shadow:no
     })(c);
   }
 
+  function track(name,title){
+    try{
+      if(window.goatcounter&&window.goatcounter.count){
+        window.goatcounter.count({path:"event-"+name,title:title||name,event:true});
+      }
+    }catch(e){}
+  }
   function say(t){note.textContent=t;}
   function hide(o){clearTimeout(o.t);o.pop.classList.remove("up","hit");o.type=null;}
   function whack(o){
@@ -151,6 +158,8 @@ button.alt{background:transparent;color:#fff;border:2px solid #fff;box-shadow:no
     document.getElementById("ovTitle").textContent="Shift over";
     document.getElementById("ovText").textContent="You filed "+score+" complaint"+(score===1?"":"s")+(nb&&score>0?". New best!":". Best is "+best+".")+" HR has been notified. Probably.";
     document.getElementById("start").textContent="Work another shift";
+    track("game-finished","Game finished");
+    track(score<=5?"score-0-5":score<=15?"score-6-15":"score-16-plus",score<=5?"Score 0-5":score<=15?"Score 6-15":"Score 16+");
     prepShare();linksBox.hidden=true;smsg.textContent="";
     shareBox.hidden=!(score>0);
     overlay.hidden=false;
@@ -178,6 +187,7 @@ button.alt{background:transparent;color:#fff;border:2px solid #fff;box-shadow:no
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(ok,fallback);}else{fallback();}
   }
   document.getElementById("shareBtn").addEventListener("click",function(){
+    track("share-click","Share button clicked");
     smsg.textContent="";
     if(navigator.share){
       var d={title:"Beat the HR",text:shareText()};
@@ -189,11 +199,12 @@ button.alt{background:transparent;color:#fff;border:2px solid #fff;box-shadow:no
       linksBox.hidden=!linksBox.hidden;
     }
   });
-  document.getElementById("shCopy").addEventListener("click",copyText);
+  document.getElementById("shCopy").addEventListener("click",function(){track("share-copy","Copy text clicked");copyText();});
 
   function start(){
     score=0;time=30;running=true;
     elScore.textContent=0;elTime.textContent=30;say("“Welcome to your performance review.”");
+    track("game-started","Game started");
     overlay.hidden=true;shareBox.hidden=true;
     tickT=setInterval(function(){time--;elTime.textContent=time;if(time<=0)end();},1000);
     spawn();
