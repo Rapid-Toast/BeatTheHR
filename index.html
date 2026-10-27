@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Beat the HR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#dfe7ea;--panel:#fff;--ink:#1d2b36;--muted:#5d6e7a;--carpet:#3f5b6b;--hole:#1a2630;--desk:#b98b5e;--accent:#d8402f;--note:#ffd84d;--skin:#f1c7a0;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10181e;--panel:#1b2831;--ink:#eef3f5;--muted:#9fb0ba;--carpet:#2c4350;--hole:#070b0e;--desk:#8d6a47;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10181e;--panel:#1b2831;--ink:#eef3f5;--muted:#9fb0ba;--carpet:#2c4350;--hole:#070b0e;--desk:#8d6a47;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{background:var(--bg);color:var(--ink);font-family:"Rubik",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;justify-content:center;touch-action:manipulation;-webkit-user-select:none;user-select:none;overflow-x:hidden}
+main{width:100%;max-width:560px;padding:14px 14px 20px;display:flex;flex-direction:column;gap:12px}
+h1{margin:0;font-size:clamp(28px,8vw,40px);font-weight:800;letter-spacing:-.02em;line-height:1}
+h1 span{color:var(--accent)}
+.sub{margin:4px 0 0;color:var(--muted);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--panel);border-radius:12px;padding:8px 10px;text-align:center}
+.stat b{display:block;font-size:26px;font-weight:800;line-height:1.1}
+.stat small{color:var(--muted);font-size:12px}
+.note{background:var(--note);color:#2a2400;border-radius:4px;padding:10px 12px;min-height:44px;font-size:15px;font-weight:500;transform:rotate(-.6deg);box-shadow:0 2px 0 rgba(0,0,0,.18);display:flex;align-items:center}
+.floor{background:var(--carpet);border-radius:18px;padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;position:relative}
+.cube{position:relative;aspect-ratio:1/1.05}
+.pit{position:absolute;inset:0;overflow:hidden;border-radius:0 0 50% 50%/0 0 22% 22%;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hole{position:absolute;left:6%;right:6%;bottom:4%;height:24%;background:var(--hole);border-radius:50%}
+.pop{position:absolute;left:12%;right:12%;bottom:12%;top:6%;transform:translateY(105%);transition:transform .12s ease-out;display:flex;align-items:flex-end;justify-content:center}
+.pop.up{transform:translateY(0)}
+.pop svg{width:100%;height:100%}
+.pop.hit{transform:translateY(32%) scaleY(.82);transition:transform .08s}
+.pop.hit::after{content:"💥";position:absolute;top:0;font-size:clamp(22px,7vw,34px)}
+.desk{position:absolute;left:0;right:0;bottom:0;height:16%;background:var(--desk);border-radius:6px;pointer-events:none}
+.intern{font-size:clamp(46px,15vw,76px);line-height:1;padding-bottom:4px}
+.hammer{position:fixed;left:0;top:0;font-size:44px;pointer-events:none;z-index:50;transform:translate(-30%,-70%) rotate(-30deg);transform-origin:70% 90%;transition:transform .07s;display:none}
+.hammer.swing{transform:translate(-30%,-70%) rotate(35deg)}
+@media (pointer:fine){.floor,.floor *{cursor:none}.hammer{display:block}}
+.overlay{position:absolute;inset:0;background:rgba(10,18,24,.82);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:20px;color:#fff;z-index:5}
+.overlay[hidden]{display:none}
+.overlay h2{margin:0;font-size:28px;font-weight:800}
+.overlay p{margin:0;max-width:34ch;font-size:15px;color:#d5e0e6}
+button{font:inherit;font-weight:800;font-size:18px;background:var(--accent);color:#fff;border:0;border-radius:12px;padding:12px 26px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.3)}
+button:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.3)}
+button:focus-visible{outline:3px solid var(--note);outline-offset:2px}
+button.alt{background:transparent;color:#fff;border:2px solid #fff;box-shadow:none;font-size:16px;padding:9px 20px}
+.share{display:flex;flex-direction:column;align-items:center;gap:8px}
+.share[hidden],.links[hidden]{display:none}
+.links{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.links a,.links button{font:inherit;font-size:14px;font-weight:500;color:#1d2b36;background:#fff;border:0;border-radius:999px;padding:7px 14px;text-decoration:none;cursor:pointer;box-shadow:none}
+.links a:focus-visible,.links button:focus-visible{outline:3px solid var(--note);outline-offset:2px}
+.smsg{font-size:13px;color:#d5e0e6;min-height:16px}
+.legend{font-size:13px;color:var(--muted);text-align:center;margin:0}
+@media (prefers-reduced-motion:reduce){.pop,.hammer{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Beat the <span>HR</span></h1>
+    <p class="sub">Whack the HR head before they pop back to their desk. Don’t hit the intern.</p>
+  </header>
+  <div class="stats">
+    <div class="stat"><b id="score">0</b><small>Complaints filed</small></div>
+    <div class="stat"><b id="time">30</b><small>Seconds left</small></div>
+    <div class="stat"><b id="best">0</b><small>Best score</small></div>
+  </div>
+  <div class="note" id="note">“We need to talk about your attendance.”</div>
+  <div class="floor" id="floor">
+    <div class="overlay" id="overlay">
+      <h2 id="ovTitle">Ready to beat HR?</h2>
+      <p id="ovText">HR head +1 point. Intern −2 points. You have 30 seconds. They get faster.</p>
+      <button id="start">Start shift</button>
+      <div class="share" id="share" hidden>
+        <button class="alt" id="shareBtn" type="button">Share your score</button>
+        <div class="links" id="links" hidden>
+          <a id="shWa" target="_blank" rel="noopener">WhatsApp</a>
+          <a id="shX" target="_blank" rel="noopener">X</a>
+          <a id="shFb" target="_blank" rel="noopener">Facebook</a>
+          <a id="shTg" target="_blank" rel="noopener">Telegram</a>
+          <button id="shCopy" type="button">Copy text</button>
+        </div>
+        <div class="smsg" id="smsg" role="status"></div>
+      </div>
+    </div>
+  </div>
+  <p class="legend">Click or tap to whack. HR gets quicker as your score climbs.</p>
+</main>
+<div class="hammer" id="hammer">🔨</div>
+
+<script>
+(function(){
+  var HR_SVG='<svg viewBox="0 0 100 110" aria-label="HR head"><rect x="14" y="78" width="72" height="40" rx="16" fill="#2f4a6b"/><path d="M42 78l8 10 8-10z" fill="#fff"/><path d="M47 88h6l3 24H44z" fill="#d8402f"/><rect x="62" y="90" width="18" height="12" rx="2" fill="#fff"/><text x="71" y="99" font-size="8" font-weight="800" text-anchor="middle" fill="#2f4a6b" font-family="sans-serif">HR</text><rect x="42" y="68" width="16" height="14" fill="#e3b58c"/><ellipse cx="50" cy="42" rx="27" ry="31" fill="#f1c7a0"/><path d="M23 38c0-22 14-30 27-30s27 8 27 30c-6-12-16-16-27-16S29 26 23 38z" fill="#5b5b63"/><circle cx="39" cy="44" r="8" fill="#fff" stroke="#222" stroke-width="2.5"/><circle cx="61" cy="44" r="8" fill="#fff" stroke="#222" stroke-width="2.5"/><path d="M47 44h6" stroke="#222" stroke-width="2.5"/><circle cx="39" cy="45" r="2.6" fill="#222"/><circle cx="61" cy="45" r="2.6" fill="#222"/><path d="M31 33l16 3M69 33l-16 3" stroke="#3b3b42" stroke-width="3" stroke-linecap="round"/><path d="M38 60q12 9 24 0" fill="none" stroke="#8a3b2e" stroke-width="3" stroke-linecap="round"/></svg>';
+  var QUOTES=["“Let’s circle back on that.”","“Per my last email…”","“This is a learning opportunity.”","“Please fill out form 27-B.”","“We’re a family here.”","“Can we schedule a quick sync?”","“Your feedback is valued.”","“Mandatory fun at 5 pm!”","“I’m just flagging this.”","“Have you tried yoga?”"];
+  var INTERN=["“Please don’t hit me, I’m unpaid!”","“I just came for the free coffee!”","“I’m the intern!”"];
+  var floor=document.getElementById("floor"),overlay=document.getElementById("overlay");
+  var elScore=document.getElementById("score"),elTime=document.getElementById("time"),elBest=document.getElementById("best"),note=document.getElementById("note");
+  var hammer=document.getElementById("hammer");
+  var cubes=[],score=0,time=30,running=false,best=0,tickT=null,spawnT=null;
+  try{best=parseInt(localStorage.getItem("beatthehr-best")||"0",10)||0;}catch(e){}
+  elBest.textContent=best;
+
+  for(var i=0;i<9;i++){
+    var c=document.createElement("div");c.className="cube";
+    c.innerHTML='<div class="pit"><div class="hole"></div><div class="pop"></div></div><div class="desk"></div>';
+    floor.appendChild(c);
+    (function(c){
+      var pit=c.querySelector(".pit"),pop=c.querySelector(".pop");
+      var o={pit:pit,pop:pop,type:null,t:null};
+      pit.addEventListener("pointerdown",function(ev){ev.preventDefault();whack(o);});
+      cubes.push(o);
+    })(c);
+  }
+
+  function say(t){note.textContent=t;}
+  function hide(o){clearTimeout(o.t);o.pop.classList.remove("up","hit");o.type=null;}
+  function whack(o){
+    if(!running||!o.type||o.pop.classList.contains("hit"))return;
+    if(o.type==="hr"){score+=1;say(QUOTES[Math.floor(Math.random()*QUOTES.length)]);}
+    else{score=Math.max(0,score-2);say(INTERN[Math.floor(Math.random()*INTERN.length)]);}
+    elScore.textContent=score;
+    clearTimeout(o.t);o.pop.classList.add("hit");
+    o.t=setTimeout(function(){hide(o);},260);
+  }
+
+  function spawn(){
+    if(!running)return;
+    var free=cubes.filter(function(o){return !o.type;});
+    if(free.length){
+      var o=free[Math.floor(Math.random()*free.length)];
+      var isIntern=Math.random()<0.15;
+      o.type=isIntern?"intern":"hr";
+      o.pop.innerHTML=isIntern?'<div class="intern" aria-label="Intern">🧑‍💻</div>':HR_SVG;
+      o.pop.classList.remove("hit");
+      void o.pop.offsetWidth;
+      o.pop.classList.add("up");
+      var stay=Math.max(420,1000-score*22);
+      o.t=setTimeout(function(){hide(o);},stay);
+    }
+    var gap=Math.max(260,820-score*18);
+    spawnT=setTimeout(spawn,gap*(0.7+Math.random()*0.6));
+  }
+
+  function end(){
+    running=false;clearInterval(tickT);clearTimeout(spawnT);
+    cubes.forEach(hide);
+    var nb=score>best;
+    if(nb){best=score;elBest.textContent=best;try{localStorage.setItem("beatthehr-best",String(best));}catch(e){}}
+    document.getElementById("ovTitle").textContent="Shift over";
+    document.getElementById("ovText").textContent="You filed "+score+" complaint"+(score===1?"":"s")+(nb&&score>0?". New best!":". Best is "+best+".")+" HR has been notified. Probably.";
+    document.getElementById("start").textContent="Work another shift";
+    prepShare();linksBox.hidden=true;smsg.textContent="";
+    shareBox.hidden=!(score>0);
+    overlay.hidden=false;
+  }
+
+  var shareBox=document.getElementById("share"),linksBox=document.getElementById("links"),smsg=document.getElementById("smsg");
+  function pageUrl(){return /^https?:/.test(location.protocol)?location.href.split("#")[0]:"";}
+  function shareText(){return "I filed "+score+" complaint"+(score===1?"":"s")+" against HR in 30 seconds on Beat the HR! Can you beat me?";}
+  function prepShare(){
+    var t=shareText(),u=pageUrl(),both=encodeURIComponent(u?t+" "+u:t),et=encodeURIComponent(t),eu=encodeURIComponent(u);
+    document.getElementById("shWa").href="https://wa.me/?text="+both;
+    document.getElementById("shX").href="https://twitter.com/intent/tweet?text="+et+(u?"&url="+eu:"");
+    document.getElementById("shFb").href="https://www.facebook.com/sharer/sharer.php?u="+eu+"&quote="+et;
+    document.getElementById("shTg").href="https://t.me/share/url?url="+eu+"&text="+et;
+  }
+  function copyText(){
+    var txt=shareText()+(pageUrl()?" "+pageUrl():"");
+    function ok(){smsg.textContent="Copied. Paste it anywhere.";}
+    function fallback(){
+      var ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";
+      document.body.appendChild(ta);ta.select();
+      try{document.execCommand("copy");ok();}catch(e){smsg.textContent="Couldn’t copy. Select and copy this: "+txt;}
+      document.body.removeChild(ta);
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(ok,fallback);}else{fallback();}
+  }
+  document.getElementById("shareBtn").addEventListener("click",function(){
+    smsg.textContent="";
+    if(navigator.share){
+      var d={title:"Beat the HR",text:shareText()};
+      if(pageUrl())d.url=pageUrl();
+      navigator.share(d).catch(function(err){
+        if(err&&err.name!=="AbortError"){linksBox.hidden=false;}
+      });
+    }else{
+      linksBox.hidden=!linksBox.hidden;
+    }
+  });
+  document.getElementById("shCopy").addEventListener("click",copyText);
+
+  function start(){
+    score=0;time=30;running=true;
+    elScore.textContent=0;elTime.textContent=30;say("“Welcome to your performance review.”");
+    overlay.hidden=true;shareBox.hidden=true;
+    tickT=setInterval(function(){time--;elTime.textContent=time;if(time<=0)end();},1000);
+    spawn();
+  }
+  document.getElementById("start").addEventListener("click",start);
+
+  document.addEventListener("pointermove",function(e){hammer.style.left=e.clientX+"px";hammer.style.top=e.clientY+"px";});
+  document.addEventListener("pointerdown",function(e){
+    hammer.style.left=e.clientX+"px";hammer.style.top=e.clientY+"px";
+    hammer.classList.add("swing");setTimeout(function(){hammer.classList.remove("swing");},90);
+  });
+})();
+</script>
+<script data-goatcounter="https://beatthehr.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
